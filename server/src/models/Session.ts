@@ -1,21 +1,35 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { IParticipant } from './Participant';
+import { Session, Participant, Event, ErrorEvent } from '../types/session';
 
-export interface ISession extends Document {
-  meetingId: string;
-  start: Date;
-  end?: Date;
-  uniqueParticipantsCount: number;
-  participantArray: IParticipant[];
-}
+const EventSchema: Schema = new Schema({
+  start: { type: Date, required: true },
+  end: { type: Date, required: true },
+});
 
-const SessionSchema = new Schema<ISession>({
+const ErrorEventSchema: Schema = new Schema({
+  start: { type: Date, required: true },
+  message: { type: String, required: true },
+});
+
+const ParticipantSchema: Schema = new Schema({
+  participantId: { type: String, required: true },
+  name: { type: String, required: true },
+  events: {
+    mic: [EventSchema],
+    webcam: [EventSchema],
+    screenShare: [EventSchema],
+    screenShareAudio: [EventSchema],
+    errors: [ErrorEventSchema],
+  },
+  timelog: [EventSchema],
+});
+
+const SessionSchema: Schema = new Schema({
   meetingId: { type: String, required: true, unique: true },
   start: { type: Date, required: true },
   end: { type: Date },
   uniqueParticipantsCount: { type: Number, default: 0 },
-  participantArray: [{ type: Schema.Types.ObjectId, ref: 'Participant' }]
+  participantArray: [ParticipantSchema],
 });
 
-export default mongoose.model<ISession>('Session', SessionSchema);
-
+export default mongoose.model<Session & Document>('Session', SessionSchema);

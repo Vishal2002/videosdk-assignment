@@ -8,65 +8,113 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sessionController = void 0;
+const Session_1 = __importDefault(require("../models/Session"));
 exports.sessionController = {
-    // Get all sessions with pagination
     getAllSessions: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
-            // TODO: Add MongoDB query here
-            res.status(200).json({ message: 'Get all sessions' });
+            const sessions = yield Session_1.default.find()
+                .skip((page - 1) * limit)
+                .limit(limit);
+            const total = yield Session_1.default.countDocuments();
+            res.status(200).json({
+                sessions,
+                totalPages: Math.ceil(total / limit),
+                currentPage: page
+            });
         }
         catch (error) {
             res.status(500).json({ message: 'Error fetching sessions' });
         }
     }),
-    // Get single session by ID
     getSessionById: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { id } = req.params;
-            // TODO: Add MongoDB query here
-            res.status(200).json({ message: `Get session ${id}` });
+            const session = yield Session_1.default.findOne({ meetingId: id });
+            if (!session) {
+                res.status(404).json({ message: 'Session not found' });
+                return;
+            }
+            res.status(200).json(session);
         }
         catch (error) {
             res.status(500).json({ message: 'Error fetching session' });
         }
     }),
-    // Create new session
     createSession: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const sessionData = req.body;
-            // TODO: Add MongoDB save here
-            res.status(201).json({ message: 'Session created' });
+            const newSession = new Session_1.default(sessionData);
+            yield newSession.save();
+            res.status(201).json(newSession);
         }
         catch (error) {
             res.status(500).json({ message: 'Error creating session' });
         }
     }),
-    // Add participant to session
     addParticipant: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { sessionId } = req.params;
             const participantData = req.body;
-            // TODO: Add MongoDB update here
-            res.status(200).json({ message: 'Participant added' });
+            const session = yield Session_1.default.findOne({ meetingId: sessionId });
+            if (!session) {
+                res.status(404).json({ message: 'Session not found' });
+                return;
+            }
+            session.participantArray.push(participantData);
+            session.uniqueParticipantsCount = session.participantArray.length;
+            yield session.save();
+            res.status(200).json(session);
         }
         catch (error) {
             res.status(500).json({ message: 'Error adding participant' });
         }
     }),
-    // Log event for participant
     logEvent: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { sessionId, participantId } = req.params;
             const eventData = req.body;
-            // TODO: Add MongoDB update here
-            res.status(200).json({ message: 'Event logged' });
+            const eventType = req.body.eventType;
+            const session = yield Session_1.default.findOne({ meetingId: sessionId });
+            if (!session) {
+                res.status(404).json({ message: 'Session not found' });
+                return;
+            }
+            const participant = session.participantArray.find(p => p.participantId === participantId);
+            if (!participant) {
+                res.status(404).json({ message: 'Participant not found' });
+                return;
+            }
+            //@ts-ignore
+            participant.events[eventType].push(eventData);
+            yield session.save();
+            res.status(200).json({ message: 'Event logged successfully' });
         }
         catch (error) {
             res.status(500).json({ message: 'Error logging event' });
+        }
+    }),
+    endSession: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const { sessionId } = req.params;
+            const session = yield Session_1.default.findOne({ meetingId: sessionId });
+            if (!session) {
+                res.status(404).json({ message: 'Session not found' });
+                return;
+            }
+            //@ts-ignore
+            session.end = new Date();
+            yield session.save();
+            res.status(200).json(session);
+        }
+        catch (error) {
+            res.status(500).json({ message: 'Error ending session' });
         }
     })
 };

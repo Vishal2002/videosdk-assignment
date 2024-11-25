@@ -1,63 +1,117 @@
 import { Request, Response } from 'express';
-import { Session } from '../types/session';
+import SessionModel from '../models/Session';
+import { Session, Participant, Event } from '../types/session';
 
 export const sessionController = {
-  // Get all sessions with pagination
-  getAllSessions: async (req: Request, res: Response) => {
+  getAllSessions: async (req: Request, res: Response): Promise<void> => {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       
-      // TODO: Add MongoDB query here
-      res.status(200).json({ message: 'Get all sessions' });
+      const sessions = await SessionModel.find()
+        .skip((page - 1) * limit)
+        .limit(limit);
+      
+      const total = await SessionModel.countDocuments();
+      
+      res.status(200).json({
+        sessions,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page
+      });
     } catch (error) {
       res.status(500).json({ message: 'Error fetching sessions' });
     }
   },
 
-  // Get single session by ID
-  getSessionById: async (req: Request, res: Response) => {
+  getSessionById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      // TODO: Add MongoDB query here
-      res.status(200).json({ message: `Get session ${id}` });
+      const session = await SessionModel.findOne({ meetingId: id });
+      if (!session) {
+        res.status(404).json({ message: 'Session not found' });
+        return;
+      }
+      res.status(200).json(session);
     } catch (error) {
       res.status(500).json({ message: 'Error fetching session' });
     }
   },
 
-  // Create new session
-  createSession: async (req: Request, res: Response) => {
+  createSession: async (req: Request, res: Response): Promise<void> => {
     try {
       const sessionData: Session = req.body;
-      // TODO: Add MongoDB save here
-      res.status(201).json({ message: 'Session created' });
+      const newSession = new SessionModel(sessionData);
+      await newSession.save();
+      res.status(201).json(newSession);
     } catch (error) {
       res.status(500).json({ message: 'Error creating session' });
     }
   },
 
-  // Add participant to session
-  addParticipant: async (req: Request, res: Response) => {
+  addParticipant: async (req: Request, res: Response): Promise<void> => {
     try {
       const { sessionId } = req.params;
-      const participantData = req.body;
-      // TODO: Add MongoDB update here
-      res.status(200).json({ message: 'Participant added' });
+      const participantData: Participant = req.body;
+      
+      const session = await SessionModel.findOne({ meetingId: sessionId });
+      if (!session) {
+        res.status(404).json({ message: 'Session not found' });
+        return;
+      }
+      
+      session.participantArray.push(participantData);
+      session.uniqueParticipantsCount = session.participantArray.length;
+      await session.save();
+      
+      res.status(200).json(session);
     } catch (error) {
       res.status(500).json({ message: 'Error adding participant' });
     }
   },
 
-  // Log event for participant
-  logEvent: async (req: Request, res: Response) => {
+  logEvent: async (req: Request, res: Response): Promise<void> => {
     try {
       const { sessionId, participantId } = req.params;
-      const eventData = req.body;
-      // TODO: Add MongoDB update here
-      res.status(200).json({ message: 'Event logged' });
+      const eventData: Event = req.body;
+      const eventType = req.body.eventType as keyof Participant['events'];
+      
+      const session = await SessionModel.findOne({ meetingId: sessionId });
+      if (!session) {
+        res.status(404).json({ message: 'Session not found' });
+        return;
+      }
+      
+      const participant = session.participantArray.find(p => p.participantId === participantId);
+      if (!participant) {
+        res.status(404).json({ message: 'Participant not found' });
+        return;
+      }
+      //@ts-ignore
+      participant.events[eventType].push(eventData);
+      await session.save();
+      
+      res.status(200).json({ message: 'Event logged successfully' });
     } catch (error) {
       res.status(500).json({ message: 'Error logging event' });
+    }
+  },
+
+  endSession: async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { sessionId } = req.params;
+      const session = await SessionModel.findOne({ meetingId: sessionId });
+      if (!session) {
+        res.status(404).json({ message: 'Session not found' });
+        return;
+      }
+      //@ts-ignore
+      session.end = new Date();
+      await session.save();
+      
+      res.status(200).json(session);
+    } catch (error) {
+      res.status(500).json({ message: 'Error ending session' });
     }
   }
 };

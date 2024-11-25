@@ -24,11 +24,31 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
+const EventSchema = new mongoose_1.Schema({
+    start: { type: Date, required: true },
+    end: { type: Date, required: true },
+});
+const ErrorEventSchema = new mongoose_1.Schema({
+    start: { type: Date, required: true },
+    message: { type: String, required: true },
+});
+const ParticipantSchema = new mongoose_1.Schema({
+    participantId: { type: String, required: true },
+    name: { type: String, required: true },
+    events: {
+        mic: [EventSchema],
+        webcam: [EventSchema],
+        screenShare: [EventSchema],
+        screenShareAudio: [EventSchema],
+        errors: [ErrorEventSchema],
+    },
+    timelog: [EventSchema],
+});
 const SessionSchema = new mongoose_1.Schema({
     meetingId: { type: String, required: true, unique: true },
     start: { type: Date, required: true },
     end: { type: Date },
     uniqueParticipantsCount: { type: Number, default: 0 },
-    participantArray: [{ type: mongoose_1.Schema.Types.ObjectId, ref: 'Participant' }]
+    participantArray: [ParticipantSchema],
 });
 exports.default = mongoose_1.default.model('Session', SessionSchema);
