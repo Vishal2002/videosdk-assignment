@@ -12,7 +12,7 @@ const ErrorEventSchema: Schema = new Schema({
 });
 
 const ParticipantSchema: Schema = new Schema({
-  participantId: { type: String, required: true },
+  participantId: { type: String },
   name: { type: String, required: true },
   events: {
     mic: [EventSchema],
@@ -25,7 +25,7 @@ const ParticipantSchema: Schema = new Schema({
 });
 
 const SessionSchema: Schema = new Schema({
-  meetingId: { type: String, required: true, unique: true },
+  meetingId: { type: String, unique: true },
   start: { type: Date, required: true },
   end: { type: Date },
   uniqueParticipantsCount: { type: Number, default: 0 },

@@ -14,6 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sessionController = void 0;
 const Session_1 = __importDefault(require("../models/Session"));
+const crypto_1 = __importDefault(require("crypto"));
+const mongoose_1 = __importDefault(require("mongoose"));
 exports.sessionController = {
     getAllSessions: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
@@ -50,7 +52,11 @@ exports.sessionController = {
     createSession: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const sessionData = req.body;
-            const newSession = new Session_1.default(sessionData);
+            // debugger;
+            const meetingId = crypto_1.default.randomBytes(7).toString('hex');
+            console.log(meetingId);
+            const newSession = new Session_1.default(Object.assign({ meetingId: meetingId, start: new Date() }, sessionData));
+            // Save the new session
             yield newSession.save();
             res.status(201).json(newSession);
         }
@@ -62,17 +68,34 @@ exports.sessionController = {
         try {
             const { sessionId } = req.params;
             const participantData = req.body;
-            const session = yield Session_1.default.findOne({ meetingId: sessionId });
+            const participantId = crypto_1.default.randomBytes(7).toString('hex');
+            // Validate sessionId is a valid ObjectId
+            if (!mongoose_1.default.Types.ObjectId.isValid(sessionId)) {
+                res.status(400).json({ message: 'Invalid sessionId' });
+                return;
+            }
+            const session = yield Session_1.default.findById(sessionId);
             if (!session) {
                 res.status(404).json({ message: 'Session not found' });
                 return;
             }
-            session.participantArray.push(participantData);
-            session.uniqueParticipantsCount = session.participantArray.length;
+            // Create a new participant object with default values
+            const newParticipant = Object.assign({ participantId: participantId, name: req.body.name, events: {
+                    mic: [],
+                    webcam: [],
+                    screenShare: [],
+                    screenShareAudio: [],
+                    errors: [],
+                }, timelog: [] }, participantData);
+            session.participantArray.push(newParticipant);
+            // Update uniqueParticipantsCount
+            const uniqueParticipantIds = new Set(session.participantArray.map(p => p.participantId));
+            session.uniqueParticipantsCount = uniqueParticipantIds.size;
             yield session.save();
             res.status(200).json(session);
         }
         catch (error) {
+            console.error('Error adding participant:', error);
             res.status(500).json({ message: 'Error adding participant' });
         }
     }),

@@ -3,8 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 
 export const validateSession = (req: Request, res: Response, next: NextFunction) => {
   const schema = Joi.object({
-    meetingId: Joi.string().required(),
-    start: Joi.date().iso().required(),
+    meetingId: Joi.string(),
+    start: Joi.date().iso(),
     end: Joi.date().iso(),
     uniqueParticipantsCount: Joi.number().integer().min(0),
     participantArray: Joi.array().items(Joi.object({

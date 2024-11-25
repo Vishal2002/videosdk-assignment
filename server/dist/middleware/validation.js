@@ -7,8 +7,8 @@ exports.validateSession = void 0;
 const joi_1 = __importDefault(require("joi"));
 const validateSession = (req, res, next) => {
     const schema = joi_1.default.object({
-        meetingId: joi_1.default.string().required(),
-        start: joi_1.default.date().iso().required(),
+        meetingId: joi_1.default.string(),
+        start: joi_1.default.date().iso(),
         end: joi_1.default.date().iso(),
         uniqueParticipantsCount: joi_1.default.number().integer().min(0),
         participantArray: joi_1.default.array().items(joi_1.default.object({

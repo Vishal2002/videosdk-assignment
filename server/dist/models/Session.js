@@ -45,7 +45,7 @@ const ParticipantSchema = new mongoose_1.Schema({
     timelog: [EventSchema],
 });
 const SessionSchema = new mongoose_1.Schema({
-    meetingId: { type: String, required: true, unique: true },
+    meetingId: { type: String, unique: true },
     start: { type: Date, required: true },
     end: { type: Date },
     uniqueParticipantsCount: { type: Number, default: 0 },
