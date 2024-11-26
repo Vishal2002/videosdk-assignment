@@ -28,7 +28,7 @@ export const sessionController = {
   getSessionById: async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const session = await SessionModel.findOne({ meetingId: id });
+      const session = await SessionModel.findById(id);
       if (!session) {
         res.status(404).json({ message: 'Session not found' });
         return;

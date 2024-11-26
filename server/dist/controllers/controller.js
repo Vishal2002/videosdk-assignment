@@ -38,7 +38,7 @@ exports.sessionController = {
     getSessionById: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { id } = req.params;
-            const session = yield Session_1.default.findOne({ meetingId: id });
+            const session = yield Session_1.default.findById(id);
             if (!session) {
                 res.status(404).json({ message: 'Session not found' });
                 return;
