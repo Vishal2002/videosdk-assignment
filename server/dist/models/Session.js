@@ -26,14 +26,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
 const EventSchema = new mongoose_1.Schema({
     start: { type: Date, required: true },
-    end: { type: Date, required: true },
+    end: { type: Date, default: null },
 });
 const ErrorEventSchema = new mongoose_1.Schema({
     start: { type: Date, required: true },
     message: { type: String, required: true },
 });
 const ParticipantSchema = new mongoose_1.Schema({
-    participantId: { type: String, required: true },
+    participantId: { type: String },
     name: { type: String, required: true },
     events: {
         mic: [EventSchema],

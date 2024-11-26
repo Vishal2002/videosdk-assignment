@@ -8,7 +8,7 @@ export const validateSession = (req: Request, res: Response, next: NextFunction)
     end: Joi.date().iso(),
     uniqueParticipantsCount: Joi.number().integer().min(0),
     participantArray: Joi.array().items(Joi.object({
-      participantId: Joi.string().required(),
+      participantId: Joi.string(),
       name: Joi.string().required(),
       events: Joi.object({
         mic: Joi.array().items(Joi.object({

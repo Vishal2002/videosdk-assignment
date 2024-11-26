@@ -12,7 +12,7 @@ const validateSession = (req, res, next) => {
         end: joi_1.default.date().iso(),
         uniqueParticipantsCount: joi_1.default.number().integer().min(0),
         participantArray: joi_1.default.array().items(joi_1.default.object({
-            participantId: joi_1.default.string().required(),
+            participantId: joi_1.default.string(),
             name: joi_1.default.string().required(),
             events: joi_1.default.object({
                 mic: joi_1.default.array().items(joi_1.default.object({

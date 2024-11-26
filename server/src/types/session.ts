@@ -20,11 +20,11 @@ export interface Session {
   }
   
   export interface Event {
-    start: string;
-    end: string;
+    start: Date;
+    end: Date | null;
   }
   
   export interface ErrorEvent {
-    start: string;
+    start: Date;
     message: string;
   }

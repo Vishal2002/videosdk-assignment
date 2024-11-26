@@ -3,7 +3,7 @@ import { Session, Participant, Event, ErrorEvent } from '../types/session';
 
 const EventSchema: Schema = new Schema({
   start: { type: Date, required: true },
-  end: { type: Date, required: true },
+  end: { type: Date, default: null },
 });
 
 const ErrorEventSchema: Schema = new Schema({

@@ -102,9 +102,24 @@ exports.sessionController = {
     logEvent: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { sessionId, participantId } = req.params;
-            const eventData = req.body;
-            const eventType = req.body.eventType;
-            const session = yield Session_1.default.findOne({ meetingId: sessionId });
+            const { eventType, action, message } = req.body;
+            // Validate sessionId is a valid ObjectId
+            if (!mongoose_1.default.Types.ObjectId.isValid(sessionId)) {
+                res.status(400).json({ message: 'Invalid sessionId' });
+                return;
+            }
+            // Validate eventType
+            const validEventTypes = ['mic', 'webcam', 'screenShare', 'screenShareAudio', 'errors'];
+            if (!validEventTypes.includes(eventType)) {
+                res.status(400).json({ message: 'Invalid event type' });
+                return;
+            }
+            // Validate action for non-error events
+            if (eventType !== 'errors' && !['start', 'stop'].includes(action)) {
+                res.status(400).json({ message: 'Invalid action. Must be "start" or "stop"' });
+                return;
+            }
+            const session = yield Session_1.default.findById(sessionId);
             if (!session) {
                 res.status(404).json({ message: 'Session not found' });
                 return;
@@ -114,19 +129,57 @@ exports.sessionController = {
                 res.status(404).json({ message: 'Participant not found' });
                 return;
             }
-            //@ts-ignore
-            participant.events[eventType].push(eventData);
+            const currentTime = new Date();
+            if (eventType === 'errors') {
+                if (!message) {
+                    res.status(400).json({ message: 'Error events require a message' });
+                    return;
+                }
+                const errorEvent = {
+                    start: currentTime,
+                    message: message
+                };
+                if (!participant.events.errors) {
+                    participant.events.errors = [];
+                }
+                participant.events.errors.push(errorEvent);
+            }
+            else {
+                const eventArray = participant.events[eventType];
+                if (!eventArray) {
+                    res.status(400).json({ message: `Event type ${eventType} is not supported for this participant` });
+                    return;
+                }
+                if (action === 'start') {
+                    // Check if there's an ongoing event
+                    const lastEvent = eventArray[eventArray.length - 1];
+                    if (lastEvent && !lastEvent.end) {
+                        res.status(400).json({ message: `Cannot start a ${eventType} event that is already in progress` });
+                        return;
+                    }
+                    eventArray.push({ start: currentTime, end: null });
+                }
+                else if (action === 'stop') {
+                    const lastEvent = eventArray[eventArray.length - 1];
+                    if (!lastEvent || lastEvent.end) {
+                        res.status(400).json({ message: `Cannot stop a ${eventType} event that hasn't started or is already stopped` });
+                        return;
+                    }
+                    lastEvent.end = currentTime;
+                }
+            }
             yield session.save();
             res.status(200).json({ message: 'Event logged successfully' });
         }
         catch (error) {
+            console.error('Error logging event:', error);
             res.status(500).json({ message: 'Error logging event' });
         }
     }),
     endSession: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const { sessionId } = req.params;
-            const session = yield Session_1.default.findOne({ meetingId: sessionId });
+            const session = yield Session_1.default.findById(sessionId);
             if (!session) {
                 res.status(404).json({ message: 'Session not found' });
                 return;
