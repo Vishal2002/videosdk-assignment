@@ -1,20 +1,13 @@
 import React, { useState } from "react"
 import { format } from "date-fns"
-import { Camera, Mic,Monitor,WifiOff, Wifi,Clipboard,LogOut } from 'lucide-react'
+import { Camera, Mic, Monitor, WifiOff, Clipboard, LogOut, ScreenShare } from 'lucide-react'
 import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
-import { Participant, TimelineEvent } from "../types/timeline"
 import { Link } from "react-router-dom"
-
-interface SessionTimelineProps {
-  participants: Participant[]
-  startTime: string
-  endTime: string
-}
+import { SessionTimelineProps, Event } from "../types/timeline"
 
 const SessionTimeline: React.FC<SessionTimelineProps> = ({ 
   participants, 
@@ -32,18 +25,22 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
     return `${(eventTime / totalDuration) * 100}%`
   }
 
-  const getEventIcon = (type: TimelineEvent['type'], status?: boolean) => {
-    switch (type) {
-      case 'video':
-        return <Camera className={cn("h-4 w-4", status ? "text-blue-500" : "text-gray-500")} />
-      case 'audio':
-        return <Mic className={cn("h-4 w-4", status ? "text-blue-500" : "text-gray-500")} />
+  const getEventIcon = (event: Event) => {
+    switch (event.type) {
+      case 'webcam':
+        return <Camera className={cn("h-4 w-4", event.status ? "text-blue-500" : "text-gray-500")} />
+      case 'mic':
+        return <Mic className={cn("h-4 w-4", event.status ? "text-blue-500" : "text-gray-500")} />
       case 'screenShare':
       case 'screenShareAudio':
-        return <Monitor className={cn("h-4 w-4", status ? "text-blue-500" : "text-gray-500")} />
+        return <ScreenShare className={cn("h-4 w-4", event.status ? "text-blue-500" : "text-gray-500")} />
       case 'error':
       case 'disconnect':
         return <WifiOff className="h-4 w-4 text-red-500" />
+      case 'join':
+        return <Monitor className="h-4 w-4 text-green-500" />
+      case 'leave':
+        return <LogOut className="h-4 w-4 text-yellow-500" />
       default:
         return null
     }
@@ -94,20 +91,19 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
                           Duration {participant.duration} Mins
                         </p>
                       </div>
-                  <Link 
-                  to={`/sessions/${participant.id}/details`} 
-                  className="text-blue-500"
-                >
-                  View details →
-                </Link>
-                    
+                      <Link 
+                        to={`/sessions/${participant.id}/details`} 
+                        className="text-blue-500"
+                      >
+                        View details →
+                      </Link>
                     </div>
 
                     <div className="h-12 relative border-t border-b border-gray-800">
                       <div className="absolute inset-0 bg-blue-500/10 rounded-full" />
                       {participant.events.map((event, index) => (
                         <React.Fragment key={index}>
-                          {index > 0 && (
+                          {index > 0 && event.endTime && (
                             <div
                               className="absolute top-1/2 h-0.5 bg-violet-600"
                               style={{
@@ -125,14 +121,18 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
                                 >
                                   <Avatar className="h-6 w-6 bg-gray-800 border-2 border-blue-500">
                                     <AvatarFallback>
-                                      {getEventIcon(event.type, event.status)}
+                                      {getEventIcon(event)}
                                     </AvatarFallback>
                                   </Avatar>
                                 </div>
                               </TooltipTrigger>
                               <TooltipContent side="top">
-                                <p>{format(new Date(event.timestamp), 'HH:mm')}</p>
+                                <p>{format(new Date(event.timestamp), 'HH:mm:ss')}</p>
+                                <p>{event.type}</p>
                                 {event.message && <p>{event.message}</p>}
+                                {event.endTime && (
+                                  <p>End: {format(new Date(event.endTime), 'HH:mm:ss')}</p>
+                                )}
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>

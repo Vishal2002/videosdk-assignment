@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import SessionTimeline from "../components/SessionTimeline"
-import { Participant, TimelineEvent } from "../types/timeline"
+import { Participant, Event } from "../types/timeline"
 
 const SessionPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -33,13 +33,13 @@ const SessionPage: React.FC = () => {
             events: [
               { type: 'join', timestamp: session.start },
               ...(p.events.mic?.map((e: any) => ({
-                type: 'audio',
+                type: 'mic',
                 timestamp: e.start,
                 status: !e.end,
                 endTime: e.end
               })) || []),
               ...(p.events.webcam?.map((e: any) => ({
-                type: 'video',
+                type: 'webcam',
                 timestamp: e.start,
                 status: !e.end,
                 endTime: e.end
@@ -62,7 +62,7 @@ const SessionPage: React.FC = () => {
                 message: e.message
               })) || []),
               { type: 'leave', timestamp: session.end || new Date().toISOString() }
-            ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+            ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) as Event[]
           })) || [],
           startTime: session.start,
           endTime: session.end || new Date().toISOString()

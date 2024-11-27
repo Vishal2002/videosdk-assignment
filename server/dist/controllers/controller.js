@@ -109,16 +109,17 @@ exports.sessionController = {
                 return;
             }
             // Validate eventType
-            const validEventTypes = ['mic', 'webcam', 'screenShare', 'screenShareAudio', 'errors'];
+            const validEventTypes = [
+                'mic', 'webcam', 'screenShare',
+                'screenShareAudio', 'errors',
+                'join', 'exit'
+            ];
             if (!validEventTypes.includes(eventType)) {
                 res.status(400).json({ message: 'Invalid event type' });
                 return;
             }
-            // Validate action for non-error events
-            if (eventType !== 'errors' && !['start', 'stop'].includes(action)) {
-                res.status(400).json({ message: 'Invalid action. Must be "start" or "stop"' });
-                return;
-            }
+            // Validate action for specific event types
+            const currentTime = new Date();
             const session = yield Session_1.default.findById(sessionId);
             if (!session) {
                 res.status(404).json({ message: 'Session not found' });
@@ -129,8 +130,33 @@ exports.sessionController = {
                 res.status(404).json({ message: 'Participant not found' });
                 return;
             }
-            const currentTime = new Date();
-            if (eventType === 'errors') {
+            // Handle timelog events (join and exit)
+            if (eventType === 'join' || eventType === 'exit') {
+                if (eventType === 'join') {
+                    // Check if there's an ongoing session entry
+                    const lastTimelogEntry = participant.timelog[participant.timelog.length - 1];
+                    if (lastTimelogEntry && !lastTimelogEntry.end) {
+                        res.status(400).json({ message: 'Participant is already in the session' });
+                        return;
+                    }
+                    // Add a new timelog entry
+                    participant.timelog.push({
+                        start: currentTime,
+                        end: null
+                    });
+                }
+                else if (eventType === 'exit') {
+                    // Close the most recent open timelog entry
+                    const openTimelogEntry = participant.timelog.find(entry => !entry.end);
+                    if (!openTimelogEntry) {
+                        res.status(400).json({ message: 'No active session to exit' });
+                        return;
+                    }
+                    openTimelogEntry.end = currentTime;
+                }
+            }
+            // Handle other event types (mic, webcam, etc.)
+            else if (eventType === 'errors') {
                 if (!message) {
                     res.status(400).json({ message: 'Error events require a message' });
                     return;
@@ -145,6 +171,11 @@ exports.sessionController = {
                 participant.events.errors.push(errorEvent);
             }
             else {
+                // Validate action for non-error events
+                if (!['start', 'stop'].includes(action)) {
+                    res.status(400).json({ message: 'Invalid action. Must be "start" or "stop"' });
+                    return;
+                }
                 const eventArray = participant.events[eventType];
                 if (!eventArray) {
                     res.status(400).json({ message: `Event type ${eventType} is not supported for this participant` });
@@ -169,7 +200,10 @@ exports.sessionController = {
                 }
             }
             yield session.save();
-            res.status(200).json({ message: 'Event logged successfully' });
+            res.status(200).json({
+                message: 'Event logged successfully',
+                timelog: participant.timelog
+            });
         }
         catch (error) {
             console.error('Error logging event:', error);
