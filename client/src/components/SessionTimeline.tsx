@@ -9,12 +9,25 @@ import { cn } from "@/lib/utils"
 import { Link } from "react-router-dom"
 import { SessionTimelineProps, Event } from "../types/timeline"
 
-const SessionTimeline: React.FC<SessionTimelineProps> = ({ 
-  participants, 
-  startTime, 
-  endTime 
+const SessionTimeline: React.FC<SessionTimelineProps> = ({
+  participants,
+  startTime,
+  endTime
 }) => {
   const [showTimeline, setShowTimeline] = useState(true)
+
+  const calculateTimeIntervals = () => {
+    const start = new Date(startTime)
+    const end = new Date(endTime)
+    const duration = end.getTime() - start.getTime()
+    const intervalCount = 11 
+    const intervalMs = duration / (intervalCount - 1)
+    
+    return Array.from({ length: intervalCount }, (_, i) => {
+      const time = new Date(start.getTime() + (intervalMs * i))
+      return time
+    })
+  }
 
   const getTimePosition = (time: string) => {
     const date = new Date(time)
@@ -25,6 +38,27 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
     return `${(eventTime / totalDuration) * 100}%`
   }
 
+  // Group events that occur at similar times
+  const groupEvents = (events: Event[]) => {
+    const groups: Event[][] = []
+    const timeThreshold = 30000 
+
+    events.forEach((event) => {
+      const eventTime = new Date(event.timestamp).getTime()
+      const existingGroup = groups.find(group => {
+        const groupTime = new Date(group[0].timestamp).getTime()
+        return Math.abs(eventTime - groupTime) < timeThreshold
+      })
+
+      if (existingGroup) {
+        existingGroup.push(event)
+      } else {
+        groups.push([event])
+      }
+    })
+
+    return groups
+  }
   const getEventIcon = (event: Event) => {
     switch (event.type) {
       case 'webcam':
@@ -46,12 +80,38 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
     }
   }
 
+  const renderEventConnections = (participant: SessionTimelineProps['participants'][0]) => {
+    return participant.events.map((event, index) => {
+      const nextEvent = participant.events[index + 1]
+      if (!nextEvent) return null
+
+      const isDashed = event.type === 'leave' || nextEvent.type === 'join'
+
+      return (
+        <div
+          key={`connection-${index}`}
+          className={cn(
+            "absolute top-1/2 h-0.5",
+            isDashed ? "border-t-2 border-dashed border-violet-600/50" : "bg-violet-600"
+          )}
+          style={{
+            left: getTimePosition(event.timestamp),
+            right: `calc(100% - ${getTimePosition(nextEvent.timestamp)})`,
+            transform: "translateY(-50%)"
+          }}
+        />
+      )
+    })
+  }
+
+  const timeIntervals = calculateTimeIntervals()
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Card className="w-full bg-gray-950 text-white">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xl font-semibold flex items-center gap-2">
-           <Clipboard className="h-4 w-4" />
+        <CardTitle className="text-xl font-semibold flex items-center gap-2">
+            <Clipboard className="h-4 w-4" />
             Participants wise Session Timeline
           </CardTitle>
           <div className="flex items-center gap-2">
@@ -66,16 +126,12 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
         <CardContent className="pt-6">
           {showTimeline && (
             <div className="relative">
-              <div className="grid grid-cols-11 gap-0 mb-4 text-sm text-gray-400">
-                {Array.from({ length: 11 }, (_, i) => {
-                  const time = new Date(startTime)
-                  time.setMinutes(time.getMinutes() + i * 2)
-                  return (
-                    <div key={i} className="text-center">
-                      {format(time, 'HH:mm')}
-                    </div>
-                  )
-                })}
+              <div className="grid grid-cols-11 gap-4 mb-4 text-sm text-gray-400">
+                {timeIntervals.map((time, i) => (
+                  <div key={i} className="text-center">
+                    {format(time, 'HH:mm')}
+                  </div>
+                ))}
               </div>
 
               <div className="space-y-8">
@@ -91,8 +147,8 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
                           Duration {participant.duration} Mins
                         </p>
                       </div>
-                      <Link 
-                        to={`/sessions/${participant.id}/details`} 
+                      <Link
+                        to={`/sessions/${participant.id}/details`}
                         className="text-blue-500"
                       >
                         View details →
@@ -101,42 +157,46 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
 
                     <div className="h-12 relative border-t border-b border-gray-800">
                       <div className="absolute inset-0 bg-blue-500/10 rounded-full" />
-                      {participant.events.map((event, index) => (
-                        <React.Fragment key={index}>
-                          {index > 0 && event.endTime && (
-                            <div
-                              className="absolute top-1/2 h-0.5 bg-violet-600"
-                              style={{
-                                left: getTimePosition(participant.events[index - 1].timestamp),
-                                right: `calc(100% - ${getTimePosition(event.timestamp)})`,
-                              }}
-                            />
-                          )}
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div
-                                  className="absolute top-1/2 -translate-y-1/2 z-10"
-                                  style={{ left: getTimePosition(event.timestamp) }}
-                                >
-                                  <Avatar className="h-6 w-6 bg-gray-800 border-2 border-blue-500">
-                                    <AvatarFallback>
-                                      {getEventIcon(event)}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top">
-                                <p>{format(new Date(event.timestamp), 'HH:mm:ss')}</p>
-                                <p>{event.type}</p>
-                                {event.message && <p>{event.message}</p>}
-                                {event.endTime && (
-                                  <p>End: {format(new Date(event.endTime), 'HH:mm:ss')}</p>
-                                )}
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </React.Fragment>
+                      {renderEventConnections(participant)}
+                      {groupEvents(participant.events).map((eventGroup, groupIndex) => (
+                        <div
+                          key={groupIndex}
+                          className="absolute top-1/2 -translate-y-1/2 z-10 flex -ml-3"
+                          style={{ left: getTimePosition(eventGroup[0].timestamp) }}
+                        >
+                          {eventGroup.map((event, eventIndex) => (
+                            <TooltipProvider key={eventIndex}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className={cn(
+                                    "relative",
+                                    eventIndex > 0 && "-ml-2"
+                                  )}>
+                                    <Avatar className={cn(
+                                      "h-6 w-6 bg-gray-800 border-2",
+                                      event.type === 'error' ? "border-red-500" :
+                                      event.type === 'join' ? "border-green-500" :
+                                      event.type === 'leave' ? "border-yellow-500" :
+                                      "border-violet-500"
+                                    )}>
+                                      <AvatarFallback>
+                                        {getEventIcon(event)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p>{format(new Date(event.timestamp), 'HH:mm:ss')}</p>
+                                  <p className="capitalize">{event.type}</p>
+                                  {event.message && <p>{event.message}</p>}
+                                  {event.endTime && (
+                                    <p>End: {format(new Date(event.endTime), 'HH:mm:ss')}</p>
+                                  )}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ))}
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -151,4 +211,3 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
 }
 
 export default SessionTimeline
-

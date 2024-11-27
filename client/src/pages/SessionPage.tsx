@@ -23,47 +23,58 @@ const SessionPage: React.FC = () => {
         const session = await response.json()
 
         const transformedData = {
-          participants: session.participantArray?.map((p: any) => ({
-            id: p.participantId,
-            name: p.name,
-            joinTime: session.start,
-            duration: session.end
-              ? ((new Date(session.end).getTime() - new Date(session.start).getTime()) / 1000 / 60).toFixed(2)
-              : "Ongoing",
-            events: [
-              { type: 'join', timestamp: session.start },
-              ...(p.events.mic?.map((e: any) => ({
-                type: 'mic',
-                timestamp: e.start,
-                status: !e.end,
-                endTime: e.end
-              })) || []),
-              ...(p.events.webcam?.map((e: any) => ({
-                type: 'webcam',
-                timestamp: e.start,
-                status: !e.end,
-                endTime: e.end
-              })) || []),
-              ...(p.events.screenShare?.map((e: any) => ({
-                type: 'screenShare',
-                timestamp: e.start,
-                status: !e.end,
-                endTime: e.end
-              })) || []),
-              ...(p.events.screenShareAudio?.map((e: any) => ({
-                type: 'screenShareAudio',
-                timestamp: e.start,
-                status: !e.end,
-                endTime: e.end
-              })) || []),
-              ...(p.events.errors?.map((e: any) => ({
-                type: 'error',
-                timestamp: e.start,
-                message: e.message
-              })) || []),
-              { type: 'leave', timestamp: session.end || new Date().toISOString() }
-            ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) as Event[]
-          })) || [],
+          participants: session.participantArray?.map((p: any) => {
+            const firstJoin = p.timelog[0]?.start;
+            const lastLeave = p.timelog[p.timelog.length - 1]?.end;
+        
+            return {
+              id: p.participantId,
+              name: p.name,
+              joinTime: firstJoin || session.start,
+              duration: lastLeave
+                ? ((new Date(lastLeave).getTime() - new Date(firstJoin).getTime()) / 1000 / 60).toFixed(2)
+                : "Ongoing",
+              events: [
+                ...p.timelog.flatMap((log: any) => [
+                  {
+                    type: 'join',
+                    timestamp: log.start,
+                    endTime: log.end
+                  }
+                ]),
+                ...(p.events.mic?.map((e: any) => ({
+                  type: 'mic',
+                  timestamp: e.start,
+                  status: !e.end,
+                  endTime: e.end
+                })) || []),
+                ...(p.events.webcam?.map((e: any) => ({
+                  type: 'webcam',
+                  timestamp: e.start,
+                  status: !e.end,
+                  endTime: e.end
+                })) || []),
+                ...(p.events.screenShare?.map((e: any) => ({
+                  type: 'screenShare',
+                  timestamp: e.start,
+                  status: !e.end,
+                  endTime: e.end
+                })) || []),
+                ...(p.events.screenShareAudio?.map((e: any) => ({
+                  type: 'screenShareAudio',
+                  timestamp: e.start,
+                  status: !e.end,
+                  endTime: e.end
+                })) || []),
+                ...(p.events.errors?.map((e: any) => ({
+                  type: 'error',
+                  timestamp: e.start,
+                  message: e.message
+                })) || []),
+                { type: 'leave', timestamp: lastLeave || session.end || new Date().toISOString() }
+              ].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()) as Event[]
+            }
+          }) || [],
           startTime: session.start,
           endTime: session.end || new Date().toISOString()
         }

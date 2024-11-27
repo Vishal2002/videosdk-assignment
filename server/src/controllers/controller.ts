@@ -44,7 +44,7 @@ export const sessionController = {
       const sessionData: Partial<Session> = req.body;
       // debugger;
       const meetingId = crypto.randomBytes(7).toString('hex');
-     console.log(meetingId);
+    //  console.log(meetingId);
      const newSession = new SessionModel({
         meetingId:meetingId,
         start: new Date(), 
@@ -148,7 +148,7 @@ export const sessionController = {
       // Handle timelog events (join and exit)
       if (eventType === 'join' || eventType === 'exit') {
         if (eventType === 'join') {
-          // Check if there's an ongoing session entry
+        
           const lastTimelogEntry = participant.timelog[participant.timelog.length - 1];
           if(session.end){
             res.status(404).json({ message: 'Session ended, You are Late' });
@@ -159,7 +159,6 @@ export const sessionController = {
             return;
           }
   
-          // Add a new timelog entry
           participant.timelog.push({ 
             start: currentTime, 
             end: null 
