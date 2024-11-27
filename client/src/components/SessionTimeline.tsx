@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { format } from "date-fns"
-import { Camera, Mic, Share, WifiOff, Clipboard,LogOut } from 'lucide-react'
+import { Camera, Mic,Monitor,WifiOff, Wifi,Clipboard,LogOut } from 'lucide-react'
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { Participant, TimelineEvent } from "../types/timeline"
+import { Link } from "react-router-dom"
 
 interface SessionTimelineProps {
   participants: Participant[]
@@ -39,7 +40,7 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
         return <Mic className={cn("h-4 w-4", status ? "text-blue-500" : "text-gray-500")} />
       case 'screenShare':
       case 'screenShareAudio':
-        return <Share className={cn("h-4 w-4", status ? "text-blue-500" : "text-gray-500")} />
+        return <Monitor className={cn("h-4 w-4", status ? "text-blue-500" : "text-gray-500")} />
       case 'error':
       case 'disconnect':
         return <WifiOff className="h-4 w-4 text-red-500" />
@@ -93,9 +94,13 @@ const SessionTimeline: React.FC<SessionTimelineProps> = ({
                           Duration {participant.duration} Mins
                         </p>
                       </div>
-                      <Button variant="link" className="text-blue-500">
-                        View details →
-                      </Button>
+                  <Link 
+                  to={`/sessions/${participant.id}/details`} 
+                  className="text-blue-500"
+                >
+                  View details →
+                </Link>
+                    
                     </div>
 
                     <div className="h-12 relative border-t border-b border-gray-800">
