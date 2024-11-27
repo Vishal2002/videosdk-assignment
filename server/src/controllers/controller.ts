@@ -150,7 +150,11 @@ export const sessionController = {
         if (eventType === 'join') {
           // Check if there's an ongoing session entry
           const lastTimelogEntry = participant.timelog[participant.timelog.length - 1];
-          if (lastTimelogEntry && !lastTimelogEntry.end) {
+          if(session.end){
+            res.status(404).json({ message: 'Session ended, You are Late' });
+            return;
+          }
+          else if (lastTimelogEntry && !lastTimelogEntry.end) {
             res.status(400).json({ message: 'Participant is already in the session' });
             return;
           }
