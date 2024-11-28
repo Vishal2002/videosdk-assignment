@@ -9,11 +9,11 @@ const SessionListTable: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-
+  const BASE_API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8080';
   useEffect(() => {
     const fetchSessions = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/sessions');
+        const response = await fetch(`${BASE_API_URL}/api/sessions`);
         if (!response.ok) {
           throw new Error('Failed to fetch session data');
         }

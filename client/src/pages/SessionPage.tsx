@@ -12,11 +12,11 @@ const SessionPage: React.FC = () => {
   } | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
+  const BASE_API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8080';
   useEffect(() => {
     const fetchSessionData = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/sessions/${id}`)
+        const response = await fetch(`${BASE_API_URL}/api/sessions/${id}`)
         if (!response.ok) {
           throw new Error('Failed to fetch session data')
         }

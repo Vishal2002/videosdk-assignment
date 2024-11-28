@@ -39,12 +39,16 @@ npm run start
 cd client
 ```
 
-2. Install Dependencies
+2. Create a `.env` file in the `client` directory with the following contents:
+```env
+VITE_SERVER_URL="http://localhost:8080"
+```
+3. Install Dependencies
 ```bash
 npm install
 ```
 
-3. Run the Development Server
+4. Run the Development Server
 ```bash
 npm run dev
 ```
