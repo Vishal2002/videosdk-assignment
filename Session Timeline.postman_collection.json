@@ -1,0 +1,186 @@
+{
+	"info": {
+		"_postman_id": "29cedf5d-5c8a-46d6-a447-896c7b05ca84",
+		"name": "Session Timeline",
+		"description": "VideoSDK assignment",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16782784"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Session",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"participantArray\": [\r\n    {\r\n      \"name\": \"Alice Johnsowwwn\",\r\n      \"events\": {\r\n        \"mic\": [\r\n          {\r\n            \"start\": \"2023-06-01T10:00:00Z\",\r\n            \"end\": \"2023-06-01T10:15:00Z\"\r\n          }\r\n        ],\r\n        \"webcam\": [\r\n          {\r\n            \"start\": \"2023-06-01T10:00:00Z\",\r\n            \"end\": \"2023-06-01T10:30:00Z\"\r\n          }\r\n        ],\r\n        \"screenShare\": [],\r\n        \"screenShareAudio\": [],\r\n        \"errors\": [\r\n          {\r\n            \"start\": \"2023-06-01T10:10:00Z\",\r\n            \"message\": \"Unstable internet connection\"\r\n          }\r\n        ]\r\n      },\r\n      \"timelog\": [\r\n        {\r\n          \"start\": \"2023-06-01T10:00:00Z\",\r\n          \"end\": \"2023-06-01T10:30:00Z\"\r\n        }\r\n      ]\r\n    },\r\n    {\r\n      \"name\": \"Bob Smith\",\r\n      \"events\": {\r\n        \"mic\": [\r\n          {\r\n            \"start\": \"2023-06-01T10:05:00Z\",\r\n            \"end\": \"2023-06-01T10:25:00Z\"\r\n          }\r\n        ],\r\n        \"webcam\": [\r\n          {\r\n            \"start\": \"2023-06-01T10:05:00Z\",\r\n            \"end\": \"2023-06-01T10:25:00Z\"\r\n          }\r\n        ],\r\n        \"screenShare\": [\r\n          {\r\n            \"start\": \"2023-06-01T10:10:00Z\",\r\n            \"end\": \"2023-06-01T10:20:00Z\"\r\n          }\r\n        ],\r\n        \"screenShareAudio\": [],\r\n        \"errors\": []\r\n      },\r\n      \"timelog\": [\r\n        {\r\n          \"start\": \"2023-06-01T10:05:00Z\",\r\n          \"end\": \"2023-06-01T10:25:00Z\"\r\n        }\r\n      ]\r\n    }\r\n  ]\r\n}\r\n\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/sessions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"sessions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Session by Id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/sessions/674739dd239e0fa8d72c7500",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"sessions",
+						"674739dd239e0fa8d72c7500"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "All Sessions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/sessions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"sessions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Participant",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Charlie Brown\",\r\n  \"events\": {\r\n    \"mic\": [\r\n      {\r\n        \"start\": \"2023-06-01T11:00:00Z\",\r\n        \"end\": \"2023-06-01T11:15:00Z\"\r\n      },\r\n      {\r\n        \"start\": \"2023-06-01T11:20:00Z\",\r\n        \"end\": \"2023-06-01T11:30:00Z\"\r\n      }\r\n    ],\r\n    \"webcam\": [\r\n      {\r\n        \"start\": \"2023-06-01T11:00:00Z\",\r\n        \"end\": \"2023-06-01T11:30:00Z\"\r\n      }\r\n    ],\r\n    \"screenShare\": [\r\n      {\r\n        \"start\": \"2023-06-01T11:10:00Z\",\r\n        \"end\": \"2023-06-01T11:20:00Z\"\r\n      }\r\n    ],\r\n    \"screenShareAudio\": [],\r\n    \"errors\": [\r\n      {\r\n        \"start\": \"2023-06-01T11:05:00Z\",\r\n        \"message\": \"Temporary network instability detected\"\r\n      }\r\n    ]\r\n  },\r\n  \"timelog\": [\r\n    {\r\n      \"start\": \"2023-06-01T11:00:00Z\",\r\n      \"end\": \"2023-06-01T11:30:00Z\"\r\n    }\r\n  ]\r\n}\r\n\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/sessions/6744c04aa66d2ca2c17f818e/participants",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"sessions",
+						"6744c04aa66d2ca2c17f818e",
+						"participants"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Log Events",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"eventType\": \"join\"\r\n\r\n}\r\n\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/api/sessions/674739dd239e0fa8d72c7500/participants/22aa6b6ea92ef3/events",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"sessions",
+						"674739dd239e0fa8d72c7500",
+						"participants",
+						"22aa6b6ea92ef3",
+						"events"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "End Session",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/api/sessions/674739dd239e0fa8d72c7500/end",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"sessions",
+						"674739dd239e0fa8d72c7500",
+						"end"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
