@@ -1,6 +1,6 @@
 import React from 'react'
 
-const SessionDetails = () => {
+const SessionDetails:React.FC= () => {
   return (
     <div>
       SessionDetails Page
