@@ -13,6 +13,13 @@ export interface Participant {
   duration: string;
   events: Event[];
 }
+export interface Session {
+  _id: string;
+  meetingId: string;
+  start: string;
+  end: string | null;
+  uniqueParticipantsCount: number;
+}
 
 export interface SessionTimelineProps {
   participants: Participant[];
